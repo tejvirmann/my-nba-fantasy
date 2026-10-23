@@ -1,0 +1,13 @@
+import { config } from "dotenv";
+import { createClient } from "@supabase/supabase-js";
+config({ path: ".env.local" });
+const { db, schema } = await import("../src/db");
+const { eq, inArray } = await import("drizzle-orm");
+const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const { data } = await admin.auth.admin.listUsers({ perPage: 200 });
+const smoke = (data?.users ?? []).filter((u) => u.email?.startsWith("smoke-") && u.email.endsWith("@example.com"));
+const del = await db.delete(schema.leagues).where(eq(schema.leagues.name, "Smoke League")).returning({ id: schema.leagues.id });
+if (smoke.length) await db.delete(schema.profiles).where(inArray(schema.profiles.id, smoke.map((u) => u.id)));
+for (const u of smoke) await admin.auth.admin.deleteUser(u.id);
+console.log(`removed ${smoke.length} smoke users, ${del.length} leagues`);
+process.exit(0);
