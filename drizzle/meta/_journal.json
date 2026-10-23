@@ -15,6 +15,13 @@
       "when": 1792783523808,
       "tag": "0001_flawless_franklin_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792785228499,
+      "tag": "0002_stiff_daredevil",
+      "breakpoints": true
     }
   ]
 }

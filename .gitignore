@@ -8,3 +8,5 @@ next-env.d.ts
 # large generated screenshots; regenerate with the scripts in README
 mockups/png/
 mockups/current/
+# third-party reference screenshots; keep local, do not publish
+espn-fantasy-images/

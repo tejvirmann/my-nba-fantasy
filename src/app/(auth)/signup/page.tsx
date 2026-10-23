@@ -13,7 +13,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
       <input className="input" name="password" type="password" placeholder="Password (8+ characters)" autoComplete="new-password" minLength={8} required />
       <SubmitButton className="btn btn-primary w-full">Sign up</SubmitButton>
       <p className="text-center text-sm">
-        Have an account? <Link href="/login" className="text-brand-2 underline">Log in</Link>
+        Have an account? <Link href="/login" className="text-link underline">Log in</Link>
       </p>
     </ActionForm>
   );

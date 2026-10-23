@@ -9,6 +9,7 @@ import { isFormatEnabled } from "@/core/formats";
 import { SLOT_BENCH } from "@/core/types";
 import { weekBounds, weekOf } from "@/core/weeks";
 import { logTransaction, UserError, type League, type Team } from "./leagues";
+import { playerRankings } from "./rankings";
 
 const { nbaGames, playerGameStats, players, rosterEntries, teams, weeklyLocks, matchups, leagues } = schema;
 
@@ -16,6 +17,8 @@ export type GameView = {
   gameId: string;
   start: Date;
   label: string; // "vs BOS" / "@ LAL"
+  /** ESPN-style one-liner: "vs CLE, W 118-104", "@NY, Sat 7:30 PM". */
+  detail: string;
   status: "scheduled" | "live" | "final";
   played: boolean;
   points: number;
@@ -30,6 +33,8 @@ export type PlayerWeekView = {
   teamAbbr: string | null;
   position: string | null;
   injuryStatus: string | null;
+  /** Average fantasy points per game over all stored box scores. */
+  avg: number;
   slot: string;
   onRoster: boolean;
   isStarter: boolean;
@@ -82,9 +87,10 @@ export async function computeWeek(leagueId: string, week: number, now = new Date
   const rosterPlayerIds = new Set(rosterRows.map((r) => r.player.id));
   const departedIds = lockRows.filter((l) => !rosterPlayerIds.has(l.playerId)).map((l) => l.playerId);
   // Independent of each other, so fetch together.
-  const [lines, departed] = await Promise.all([
+  const [lines, departed, ranks] = await Promise.all([
     gameIds.length ? db.select().from(playerGameStats).where(inArray(playerGameStats.gameEspnId, gameIds)) : Promise.resolve([]),
     departedIds.length ? db.select().from(players).where(inArray(players.id, departedIds)) : Promise.resolve([]),
+    playerRankings(settings.scoring),
   ]);
   const linesByPlayer = new Map<string, Map<string, (typeof lines)[number]>>();
   for (const l of lines) {
@@ -108,11 +114,20 @@ export async function computeWeek(leagueId: string, week: number, now = new Date
       if (!line && !onTeamSchedule) continue;
       if (acquiredAt && g.startTime < acquiredAt) continue; // only games after the player joined this team count
       const abbr = line?.teamAbbr ?? p.teamAbbr;
-      const label = g.homeAbbr === abbr ? `vs ${g.awayAbbr}` : `@ ${g.homeAbbr}`;
+      const home = g.homeAbbr === abbr;
+      const label = home ? `vs ${g.awayAbbr}` : `@ ${g.homeAbbr}`;
+      const [pf, pa] = home ? [g.homeScore, g.awayScore] : [g.awayScore, g.homeScore];
+      const detail =
+        g.status === "final" && pf !== null && pa !== null
+          ? `${label}, ${pf > pa ? "W" : "L"} ${pf}-${pa}`
+          : g.status === "live"
+            ? `${label}, Live${pf !== null ? ` ${pf}-${pa}` : ""}`
+            : `${label}, ${new Intl.DateTimeFormat("en-US", { timeZone: league.timezone, weekday: "short", hour: "numeric", minute: "2-digit" }).format(g.startTime)}`;
       gameViews.push({
         gameId: g.espnId,
         start: g.startTime,
         label,
+        detail,
         status: g.status as GameView["status"],
         played: !!line,
         points: line ? fantasyPoints(line, settings.scoring) : 0,
@@ -149,6 +164,7 @@ export async function computeWeek(leagueId: string, week: number, now = new Date
       teamAbbr: p.teamAbbr,
       position: p.position,
       injuryStatus: p.injuryStatus,
+      avg: ranks.get(p.espnId)?.avg ?? 0,
       slot: effectiveSlot,
       onRoster,
       isStarter,

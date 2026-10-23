@@ -494,7 +494,14 @@ Principles: serve everything from our database, keep requests per page small, ne
 
 ## 16. Design and mockup phase
 
-See [mockups/MOCKUP_PLAN.md](mockups/MOCKUP_PLAN.md). Three directions (Broadcast, Clean Cards, Arena) are mocked for 14 screens on phone and desktop in [mockups/index.html](mockups/index.html). The real app already has a responsive shell (sidebar and two-column pages on desktop, bottom tabs on phones); the chosen direction will be applied as design tokens.
+**Direction: ESPN Fantasy, minimal and clean, green accent that users can change.** The baseline is the pair of ESPN screenshots in `espn-fantasy-images/` (mobile roster, desktop draft room). See [mockups/MOCKUP_PLAN.md](mockups/MOCKUP_PLAN.md).
+
+- **Navigation:** four tabs (Roster, Matchup, Players, League) with a green header; Standings, Trades, Activity, Draft and Settings sit under League as a sub-nav. Replaces the earlier six bottom tabs.
+- **Roster rows:** slot pill, large headshot, short name, `Wk | Avg`, and the game result, plus a Lock pill that opens a sheet.
+- **Week selector** on Roster and Matchup (`?week=N`), read-only for past and future weeks.
+- **Draft room:** ESPN's layout (pick strip, queue and roster, players table, picks). A pick queue with auto-draft from the queue is planned.
+- **Accent color:** a per-user setting (`profiles.accent_color`, default `#0c8312` sampled from ESPN). Text and link colors are derived from it so any choice stays readable (`src/core/color.ts`, unit-tested).
+- **Mockups:** three variations of the baseline (A Faithful, B Minimal, C Compact) across 15 screens, phone and desktop, in `mockups/index.html`. The real app currently follows A.
 
 ## 17. Status
 
@@ -503,9 +510,10 @@ See [mockups/MOCKUP_PLAN.md](mockups/MOCKUP_PLAN.md). Three directions (Broadcas
 | Scoring, Lock-In (both modes), weeks, draft, schedule, standings, playoffs, waivers, trades | done and tested (51 unit tests plus a full-season simulation) |
 | Data sync from ESPN, history backfill, refresh button with attribution | done |
 | Accounts, admin, game-format switches, demo league | done |
-| Responsive layout (phone and desktop) | done, pending design direction |
-| Mockups and discovery plan | done, awaiting picks |
+| ESPN-style responsive UI (phone and desktop), adjustable accent color | done (variation A); awaiting picks on A / B / C |
+| Mockups and discovery plan | done (ESPN-based), awaiting picks |
 | PWA install | basic (phase 1) |
 | Push notifications, offline, native app | planned |
 | Betting, loans, FAAB, double-points week | planned (formats registered) |
 | Commissioner stat-override screen | planned |
+| Draft pick queue (auto-draft from queue) | planned |

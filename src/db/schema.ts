@@ -20,6 +20,7 @@ export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(), // = auth.users.id
   displayName: text("display_name").notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  accentColor: text("accent_color"), // personal theme color; null = default green
   createdAt: createdAt(),
 });
 

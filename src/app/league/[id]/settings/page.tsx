@@ -19,19 +19,23 @@ export default async function SettingsPage({ params }: { params: Promise<{ id: s
   const setup = league.status === "setup";
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-start lg:gap-6">
-      <section className="card p-4">
+    <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-start lg:gap-6">
+      <section className="card">
+        <div className="sec"><span>Invite friends</span></div>
+        <div className="pad">
         <div className="label">Invite code</div>
-        <div className="text-2xl font-extrabold tracking-[0.3em] text-brand">{league.inviteCode}</div>
+        <div className="text-2xl font-extrabold tracking-[0.3em] text-link">{league.inviteCode}</div>
         <ul className="mt-3 divide-y divide-line text-sm">
-          {teams.map((t) => (<li key={t.id} className="py-1.5">{t.name}{t.ownerId === league.commissionerId ? <span className="chip ml-2 bg-slate-100 text-slate-600">Commissioner</span> : null}</li>))}
+          {teams.map((t) => (<li key={t.id} className="py-1.5">{t.name}{t.ownerId === league.commissionerId ? <span className="tag ml-2">Commissioner</span> : null}</li>))}
         </ul>
+        </div>
       </section>
 
       <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
       {isCommissioner ? (
-        <ActionForm action={updateSettings.bind(null, id)} className="card space-y-4 p-4">
-          <h2 className="font-bold">Commissioner settings</h2>
+        <ActionForm action={updateSettings.bind(null, id)} className="card">
+          <div className="sec"><span>Commissioner settings</span></div>
+          <div className="pad space-y-4">
           <label className="block"><span className="label">League name</span><input className="input mt-1" name="name" defaultValue={league.name} /></label>
 
           <label className="block">
@@ -73,22 +77,27 @@ export default async function SettingsPage({ params }: { params: Promise<{ id: s
             <p className="text-xs text-muted">Scoring, schedule and roster size are locked once the draft starts.</p>
           )}
           <SubmitButton className="btn btn-primary w-full">Save settings</SubmitButton>
+          </div>
         </ActionForm>
       ) : (
-        <section className="card p-4 text-sm">
-          <h2 className="mb-2 font-bold">League rules</h2>
+        <section className="card">
+          <div className="sec"><span>League rules</span></div>
+          <div className="pad text-sm">
           <p>Lock-In mode: <b>{s.lockMode === "strict" ? "Strict" : "Open"}</b></p>
           <p>Starters: {s.starterSlots.join(", ")} · Bench: {s.benchSize}</p>
           <p>Regular season: {league.regularWeeks} weeks · Playoffs: top {league.playoffTeams}</p>
+          </div>
         </section>
       )}
 
       </div>
       {isCommissioner && !setup ? (
-        <ActionForm action={processWaiversAction.bind(null, id)} className="card p-4 lg:col-start-1">
-          <h2 className="mb-2 font-bold">Waivers</h2>
+        <ActionForm action={processWaiversAction.bind(null, id)} className="card lg:col-start-1">
+          <div className="sec"><span>Waivers</span></div>
+          <div className="pad">
           <p className="mb-2 text-xs text-muted">Claims are also processed automatically every day.</p>
-          <SubmitButton className="btn btn-ghost">Process waivers now</SubmitButton>
+          <SubmitButton className="btn">Process waivers now</SubmitButton>
+          </div>
         </ActionForm>
       ) : null}
     </div>

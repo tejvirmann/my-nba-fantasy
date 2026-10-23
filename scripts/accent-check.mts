@@ -1,0 +1,35 @@
+// Browser check of the accent-color setting: live preview, persistence, and reset. Leaves the admin account on the default color.
+import { config } from "dotenv";
+import { chromium } from "playwright-core";
+config({ path: ".env.local" });
+const BASE = process.env.BASE ?? "http://localhost:3111";
+const browser = await chromium.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const page = await (await browser.newContext()).newPage();
+await page.goto(`${BASE}/login`);
+await page.fill('input[name="email"]', "admin");
+await page.fill('input[name="password"]', "password");
+await Promise.all([page.waitForURL(`${BASE}/`, { timeout: 30_000 }), page.click('button[type="submit"]')]);
+const accent = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
+await page.goto(`${BASE}/account`);
+console.log("default accent:", await accent());
+await page.click('button[aria-label="Blue"]');
+console.log("live preview after clicking Blue:", await accent());
+await page.click('button:has-text("Save color")');
+await page.waitForSelector("text=Color saved.");
+await page.goto(`${BASE}/`);
+console.log("persisted on another page:", await accent(), "| header bg:", await page.evaluate(() => getComputedStyle(document.querySelector(".hdr")!).backgroundColor));
+await page.goto(`${BASE}/account`);
+await page.click('button:has-text("Reset to green")');
+await page.click('button:has-text("Save color")');
+await page.waitForSelector("text=Color saved.");
+await page.goto(`${BASE}/`);
+console.log("after reset:", await accent());
+// mockup gallery accent control
+await page.goto("http://127.0.0.1:4100/index.html");
+await page.waitForTimeout(500);
+await page.click('header .sw[data-hex="#6d28d9"]');
+await page.waitForTimeout(300);
+const frameAccent = await page.evaluate(() => { const f = document.querySelector("iframe") as HTMLIFrameElement; return getComputedStyle(f.contentDocument!.documentElement).getPropertyValue("--accent").trim(); });
+console.log("gallery -> iframe accent:", frameAccent);
+await page.click('header .sw[data-hex="#0c8312"]');
+await browser.close();

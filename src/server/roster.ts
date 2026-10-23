@@ -130,6 +130,7 @@ export async function dropPlayer(input: { league: League; teamId: string; userId
 
 export type PoolPlayer = {
   id: string;
+  espnId: string;
   name: string;
   teamAbbr: string | null;
   position: string | null;
@@ -159,6 +160,7 @@ export async function playerPool(league: League, opts: { q?: string; position?: 
       const r = ranks.get(p.espnId);
       return {
         id: p.id,
+        espnId: p.espnId,
         name: p.name,
         teamAbbr: p.teamAbbr,
         position: p.position,

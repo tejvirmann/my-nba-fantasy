@@ -1,194 +1,185 @@
 import Link from "next/link";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { RefreshBar } from "@/components/RefreshBar";
-import { computeWeek, currentWeek, type PlayerWeekView, type TeamWeekView } from "@/server/engine";
-import { orderLineup, sourceLabel } from "@/server/lineup";
-import { ago, fmt1, leagueContext } from "@/server/page";
+import { parseWeek, WeekBar } from "@/components/WeekBar";
+import { abbrevName } from "@/lib/names";
+import { computeWeek, currentWeek, type PlayerWeekView } from "@/server/engine";
+import { orderLineup } from "@/server/lineup";
+import { fmt1, leagueContext } from "@/server/page";
 
-function Chip({ p }: { p: PlayerWeekView }) {
-  const label = sourceLabel(p);
-  const tone = p.lock ? "bg-emerald-100 text-emerald-700" : p.resolution.provisional ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600";
-  return <span className={`chip ${tone}`}>{label}</span>;
+function maxWeek(l: { regularWeeks: number; status: string }) {
+  return l.regularWeeks + (l.status === "playoffs" || l.status === "complete" ? 3 : 0);
 }
 
-function Side({ tv, align }: { tv: TeamWeekView | null; align: "left" | "right" }) {
+function Cell({ p, slot, right }: { p: PlayerWeekView | null; slot: string; right?: boolean }) {
+  if (!p) return <div className={`mcell ${right ? "r" : ""}`}><span className="s">{slot} · empty</span></div>;
+  const c = p.resolution.counted;
+  const line = p.games.find((g) => g.gameId === c?.gameId)?.line;
   return (
-    <div className={`min-w-0 ${align === "right" ? "text-right" : ""}`}>
-      <div className="truncate text-xs font-semibold text-white/80">{tv?.team.name ?? "Bye week"}</div>
-      <div className="text-4xl font-extrabold tabular-nums">{tv ? fmt1(tv.total) : "—"}</div>
+    <div className={`mcell ${right ? "r" : ""}`}>
+      <span className="mav"><PlayerAvatar name={p.name} src={p.imageUrl} team={p.teamAbbr} size={36} /></span>
+      <div className="min-w-0">
+        <div className="nm"><a>{abbrevName(p.name)}</a></div>
+        <div className="s">
+          {p.teamAbbr} {p.position}
+          {line ? ` · ${line.pts}/${line.reb}/${line.ast}` : ""}
+          {p.injuryStatus ? ` · ${p.injuryStatus}` : ""}
+        </div>
+      </div>
+      <span className="p tnum">{fmt1(p.counted)}</span>
     </div>
   );
 }
 
-export default async function MatchupPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MatchupPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string; m?: string }> }) {
   const { id } = await params;
-  const { league, team, user } = await leagueContext(id);
-  const week = currentWeek(league);
-  const inSeason = (league.status === "active" || league.status === "playoffs") && week >= 1;
+  const { week: weekParam, m: matchParam } = await searchParams;
+  const { league, team } = await leagueContext(id);
+  const current = currentWeek(league);
+  const inSeason = (league.status === "active" || league.status === "playoffs" || league.status === "complete") && current >= 1;
 
   if (!inSeason) {
     const teamRows = await db.select().from(schema.teams).where(eq(schema.teams.leagueId, id));
     return (
-      <div className="space-y-4">
-        <div className="card p-5">
-          <div className="label">Invite code</div>
-          <div className="mt-1 text-3xl font-extrabold tracking-[0.3em] text-brand">{league.inviteCode}</div>
-          <p className="mt-2 text-sm text-muted">Friends can join at <span className="font-semibold">/join</span> with this code.</p>
+      <div className="pad stack">
+        <div className="card">
+          <div className="sec"><span>Invite friends</span></div>
+          <div className="pad">
+            <div className="label">Invite code</div>
+            <div className="text-3xl font-light tracking-[0.3em]">{league.inviteCode}</div>
+            <p className="mt-2 text-sm text-muted">Friends join at <b>/join</b> with this code.</p>
+          </div>
         </div>
-        <div className="card p-4">
-          <div className="label mb-2">Teams ({teamRows.length})</div>
-          <ul className="divide-y divide-line">
-            {teamRows.map((t) => (
-              <li key={t.id} className="py-2 text-sm font-semibold">{t.name}</li>
-            ))}
-          </ul>
+        <div className="card">
+          <div className="sec"><span>Teams ({teamRows.length})</span></div>
+          {teamRows.map((t) => (<div key={t.id} className="rrow" style={{ padding: "12px 16px" }}>{t.name}</div>))}
         </div>
         {league.status === "setup" || league.status === "drafting" ? (
-          <Link href={`/league/${id}/draft`} className="btn btn-accent w-full">Go to the draft room</Link>
+          <Link href={`/league/${id}/draft`} className="btn btn-primary w-full">Go to the draft room</Link>
         ) : (
-          <div className="card p-4 text-sm text-muted">Week 1 starts {league.week1Start}.</div>
+          <div className="card pad text-sm text-muted">Week 1 starts {league.week1Start}.</div>
         )}
         <RefreshBar leagueId={id} />
       </div>
     );
   }
 
+  const max = maxWeek(league);
+  const week = parseWeek(weekParam, current, max);
   const [view, matchRows] = await Promise.all([
     computeWeek(id, week, new Date(), league),
     db.select().from(schema.matchups).where(and(eq(schema.matchups.leagueId, id), eq(schema.matchups.week, week))),
   ]);
-  const myMatch = team ? matchRows.find((m) => m.teamAId === team.id || m.teamBId === team.id) : undefined;
-  const allMatches = matchRows;
   const byTeam = new Map(view.teams.map((t) => [t.team.id, t]));
-  const mine = team ? byTeam.get(team.id)! : null;
-  const oppId = myMatch ? (myMatch.teamAId === team!.id ? myMatch.teamBId : myMatch.teamAId) : null;
-  const opp = oppId ? (byTeam.get(oppId) ?? null) : null;
-
-  const mineLineup = mine ? orderLineup(mine.players, league.settings.starterSlots) : null;
-  const oppLineup = opp ? orderLineup(opp.players, league.settings.starterSlots) : null;
-
-  const activity = await db
-    .select()
-    .from(schema.transactions)
-    .where(eq(schema.transactions.leagueId, id))
-    .orderBy(desc(schema.transactions.createdAt))
-    .limit(8);
-  const teamName = new Map(view.teams.map((t) => [t.team.id, t.team.name]));
+  const mineMatch = team ? matchRows.find((m) => m.teamAId === team.id || m.teamBId === team.id) : undefined;
+  // Any matchup in the league can be opened from the swipe strip; default is yours.
+  const myMatch = matchRows.find((m) => m.id === matchParam) ?? mineMatch ?? matchRows[0];
+  const viewingMine = !!team && !!myMatch && (myMatch.teamAId === team.id || myMatch.teamBId === team.id);
+  const matchHref = (m: (typeof matchRows)[number]) => {
+    const qs = new URLSearchParams();
+    if (week !== current) qs.set("week", String(week));
+    if (m.id !== mineMatch?.id) qs.set("m", m.id);
+    const q = qs.toString();
+    return `/league/${id}${q ? `?${q}` : ""}`;
+  };
+  const aId = myMatch?.teamAId ?? null;
+  const bId = myMatch?.teamBId ?? null;
+  const left = aId ? byTeam.get(team && bId === team.id ? bId : aId) : null;
+  const rightTeam = aId ? byTeam.get(team && bId === team.id ? aId : (bId ?? "")) ?? null : null;
+  const finalized = !!myMatch?.finalizedAt;
+  const lLineup = left ? orderLineup(left.players, league.settings.starterSlots) : null;
+  const rLineup = rightTeam ? orderLineup(rightTeam.players, league.settings.starterSlots) : null;
+  const lTotal = left?.total ?? 0;
+  const rTotal = rightTeam?.total ?? 0;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:gap-6">
-      <div className="min-w-0 space-y-4">
-      {mine ? (
-        <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-2 p-4 text-white shadow-sm">
-          <div className="mb-2 flex items-center justify-between text-xs text-white/70">
-            <span>Week {week}{myMatch?.isPlayoff ? " · Playoffs" : ""}</span>
-            <span>{view.settled ? "Final" : `Ends ${new Intl.DateTimeFormat("en-US", { timeZone: league.timezone, weekday: "short", month: "short", day: "numeric" }).format(new Date(view.end.getTime() - 1))}`}</span>
-          </div>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-            <Side tv={mine} align="left" />
-            <span className="pb-2 text-xs font-bold text-white/60">VS</span>
-            <Side tv={opp} align="right" />
-          </div>
-        </section>
-      ) : null}
-
-      {mineLineup ? (
-        <section className="card overflow-hidden">
-          <div className="grid grid-cols-[1fr_1fr] border-b border-line bg-slate-50 px-3 py-2 text-xs font-semibold text-muted">
-            <span>{mine!.team.name}</span>
-            <span className="text-right">{opp?.team.name ?? "—"}</span>
-          </div>
-          <ul className="divide-y divide-line">
-            {mineLineup.starters.map((row, i) => {
-              const a = row.player;
-              const b = oppLineup?.starters[i]?.player ?? null;
+    <>
+      <WeekBar basePath={`/league/${id}`} week={week} current={current} max={max} />
+      {matchRows.length > 1 ? (
+        <>
+          <div className="sec"><span>All matchups · Week {week}</span><span className="swipe">Swipe →</span></div>
+          <div className="mstrip">
+            {matchRows.map((m) => {
+              const a = byTeam.get(m.teamAId);
+              const b = m.teamBId ? byTeam.get(m.teamBId) : null;
+              const at = a?.total ?? 0;
+              const bt = b?.total ?? 0;
+              const isMine = m.id === mineMatch?.id;
               return (
-                <li key={i} className="grid grid-cols-[1fr_1fr] gap-2 px-3 py-2">
-                  <Cell p={a} slot={row.slot} align="left" />
-                  <Cell p={b} slot={row.slot} align="right" />
-                </li>
+                <Link key={m.id} href={matchHref(m)} scroll={false} className={`mcard ${m.id === myMatch?.id ? "on" : ""}`}>
+                  <div className="mc-top">
+                    <span className={`tag ${m.id === myMatch?.id ? "acc" : ""}`}>{isMine ? "Your matchup" : m.isPlayoff ? "Playoffs" : m.finalizedAt ? "Final" : "Live"}</span>
+                  </div>
+                  <div className={`mc-t ${at >= bt ? "lead" : ""}`}><span className="n">{a?.team.name}</span><b className="tnum">{fmt1(at)}</b></div>
+                  <div className={`mc-t ${bt > at ? "lead" : ""}`}><span className="n">{b?.team.name ?? "Bye"}</span><b className="tnum">{b ? fmt1(bt) : "—"}</b></div>
+                </Link>
               );
             })}
-          </ul>
-          <div className="border-t border-line px-3 py-2 text-right text-xs text-muted">
-            <Link href={`/league/${id}/team`} className="font-semibold text-brand-2">Set lineup & lock in games →</Link>
           </div>
-        </section>
+        </>
       ) : null}
-
-      </div>
-      <div className="min-w-0 space-y-4">
-      <section>
-        <h2 className="label mb-2">League scoreboard</h2>
-        <div className="grid gap-2">
-          {allMatches.map((m) => {
-            const a = byTeam.get(m.teamAId);
-            const b = m.teamBId ? byTeam.get(m.teamBId) : null;
-            return (
-              <div key={m.id} className="card grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-2 text-sm">
-                <span className="truncate font-semibold">{a?.team.name}</span>
-                <span className="tabular-nums font-bold">{fmt1(a?.total ?? 0)} – {b ? fmt1(b.total) : "bye"}</span>
-                <span className="truncate text-right font-semibold">{b?.team.name ?? ""}</span>
+      {left ? (
+        <>
+          <div className="mhead">
+            <div className="mteam">
+              <span className="av lg" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>{left.team.name.slice(0, 2).toUpperCase()}</span>
+              <div className="min-w-0">
+                <div className="t">{left.team.name}</div>
+                <div className="rec">{team?.id === left.team.id ? "You" : ""}{myMatch?.isPlayoff ? " · Playoffs" : ""}</div>
+                <div className={`mscore tnum ${lTotal >= rTotal ? "lead" : ""}`}>{fmt1(lTotal)}</div>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <RefreshBar leagueId={id} />
-
-      {activity.length ? (
-        <section>
-          <h2 className="label mb-2">Recent activity</h2>
-          <ul className="card divide-y divide-line">
-            {activity.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                <span className="min-w-0 truncate">
-                  <span className="font-semibold">{a.teamId ? teamName.get(a.teamId) : "League"}</span>{" "}
-                  <span className="text-muted">{describe(a.type, a.payload)}</span>
-                </span>
-                <span className="shrink-0 text-xs text-muted">{ago(a.createdAt)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+            </div>
+            <div className="mvs">VS</div>
+            <div className="mteam r">
+              <span className="av lg" style={{ background: "#555b64" }}>{(rightTeam?.team.name ?? "BYE").slice(0, 2).toUpperCase()}</span>
+              <div className="min-w-0">
+                <div className="t">{rightTeam?.team.name ?? "Bye week"}</div>
+                <div className="rec">{finalized ? "Final" : view.settled ? "Final" : "In progress"}</div>
+                <div className={`mscore tnum ${rTotal > lTotal ? "lead" : ""}`}>{rightTeam ? fmt1(rTotal) : "—"}</div>
+              </div>
+            </div>
+          </div>
+          {rightTeam ? (
+            <div className="mbar" aria-hidden>
+              <i style={{ width: `${(lTotal / Math.max(1, lTotal + rTotal)) * 100}%` }} />
+            </div>
+          ) : null}
+        </>
       ) : null}
-      <p className="sr-only">{user.displayName}</p>
-      </div>
-    </div>
-  );
-}
 
-function describe(type: string, p: Record<string, unknown>): string {
-  const name = typeof p.name === "string" ? p.name : "a player";
-  if (type === "draft") return `drafted ${name}`;
-  if (type === "add") return `added ${name}`;
-  if (type === "drop") return "dropped a player";
-  if (type === "waiver") return `won ${name} on waivers`;
-  if (type === "lock") return "locked in a game";
-  if (type === "lineup") return "updated their lineup";
-  if (type === "trade") return `trade ${String(p.action ?? "")}`;
-  return type;
-}
+      <div className="grid2 side">
+        <div>
+          <div className="sec">
+            <span>Starters</span>
+            <span className="tag">{league.settings.lockMode === "strict" ? "Strict Lock-In" : "Open Lock-In"}</span>
+          </div>
+          {lLineup?.starters.map((row, i) => (
+            <div key={i} className="mrow">
+              <Cell p={row.player} slot={row.slot} />
+              <div className="mslot">{row.slot}</div>
+              <Cell p={rLineup?.starters[i]?.player ?? null} slot={row.slot} right />
+            </div>
+          ))}
+          {!left ? <div className="pad text-sm text-muted">No matchup this week.</div> : null}
+          {viewingMine && lLineup && lLineup.bench.length ? (
+            <div className="sec">
+              <span>Bench</span>
+              <span style={{ fontWeight: 400, color: "var(--mut)", textTransform: "none", letterSpacing: 0 }}>{lLineup.bench.map((b) => abbrevName(b.name)).join(" · ")}</span>
+            </div>
+          ) : null}
+          {left && viewingMine ? (
+            <div className="pad text-right text-sm">
+              <Link href={`/league/${id}/team`} className="font-semibold text-link">Set lineup & lock in games →</Link>
+            </div>
+          ) : null}
+        </div>
 
-function Cell({ p, slot, align }: { p: PlayerWeekView | null; slot: string; align: "left" | "right" }) {
-  const right = align === "right";
-  if (!p) {
-    return <div className={`text-xs text-muted ${right ? "text-right" : ""}`}>{slot} · empty</div>;
-  }
-  return (
-    <div className={`flex min-w-0 items-center gap-2 ${right ? "flex-row-reverse text-right" : ""}`}>
-      <PlayerAvatar name={p.name} src={p.imageUrl} team={p.teamAbbr} size={32} />
-      <div className="min-w-0 flex-1">
-        <div className="break-words text-[12px] font-semibold leading-tight sm:text-sm">{p.name}</div>
-        <div className="truncate text-[11px] text-muted">{slot} · {p.teamAbbr}{p.injuryStatus ? ` · ${p.injuryStatus}` : ""}</div>
+        <div className="pad stack">
+          <RefreshBar leagueId={id} />
+        </div>
       </div>
-      <div className="shrink-0 text-right">
-        <div className="text-[15px] font-extrabold tabular-nums sm:text-base">{fmt1(p.counted)}</div>
-        <span className="hidden sm:inline-flex"><Chip p={p} /></span>
-      </div>
-    </div>
+    </>
   );
 }

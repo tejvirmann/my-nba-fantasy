@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { rosterLimit } from "@/core/roster";
+import { abbrevName } from "@/lib/names";
 import { fmt1, leagueContext } from "@/server/page";
 import { playerPool, teamRoster } from "@/server/roster";
 import { pendingClaims } from "@/server/waivers";
@@ -26,77 +27,67 @@ export default async function PlayersPage({
   const full = roster.length >= rosterLimit(league.settings);
 
   return (
-    <div className="space-y-4">
-      <form className="flex gap-2" role="search">
-        <input name="q" defaultValue={q ?? ""} placeholder="Search players or team" className="input" aria-label="Search players" />
-        <select name="pos" defaultValue={pos ?? ""} className="input !w-28" aria-label="Position">
-          <option value="">All</option>
+    <>
+      <form className="toolbar" role="search" style={{ alignItems: "center" }}>
+        <select name="pos" defaultValue={pos ?? ""} className="pill" style={{ color: "var(--link)", borderColor: "var(--link)" }} aria-label="Position">
+          <option value="">All Pos.</option>
           <option value="G">G</option>
           <option value="F">F</option>
           <option value="C">C</option>
         </select>
-        <button className="btn btn-primary">Go</button>
+        <input name="q" defaultValue={q ?? ""} placeholder="Player name or team" className="input min-w-0 flex-1" style={{ maxWidth: 360 }} aria-label="Search players" />
+        <button className="btn btn-primary">Search</button>
       </form>
 
       {claims.length ? (
-        <section>
-          <h2 className="label mb-2">Your pending claims</h2>
-          <ul className="card divide-y divide-line">
-            {claims.map(({ claim, player }) => (
-              <li key={claim.id} className="flex items-center justify-between px-3 py-2 text-sm">
-                <span className="font-semibold">{player.name}</span>
-                <ActionForm action={cancelClaimAction.bind(null, id, claim.id)} inline>
-                  <SubmitButton className="btn btn-ghost btn-sm">Cancel</SubmitButton>
-                </ActionForm>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <>
+          <div className="sec"><span>Your pending claims</span></div>
+          {claims.map(({ claim, player }) => (
+            <div key={claim.id} className="rrow" style={{ padding: "10px 16px" }}>
+              <span className="flex-1 font-semibold">{player.name}</span>
+              <ActionForm action={cancelClaimAction.bind(null, id, claim.id)} inline>
+                <SubmitButton className="pill sm">Cancel</SubmitButton>
+              </ActionForm>
+            </div>
+          ))}
+        </>
       ) : null}
 
-      <section>
-        <h2 className="label mb-2">Available players {full ? "· roster full, pick a drop" : ""}</h2>
-        <ul className="card divide-y divide-line">
-          {pool.map((p) => (
-            <li key={p.id} className="px-3 py-2">
-              <div className="flex items-center gap-3">
-                <PlayerAvatar name={p.name} src={p.imageUrl} team={p.teamAbbr} size={40} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold leading-tight">{p.name}</div>
-                  <div className="truncate text-xs text-muted">
-                    {p.position} · {p.teamAbbr}
-                    {p.injuryStatus ? <span className="ml-1 font-semibold text-lose">{p.injuryStatus}</span> : null}
-                    {p.onWaivers ? <span className="chip ml-1 bg-amber-100 text-amber-700">Waivers</span> : null}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold tabular-nums">{p.gp ? fmt1(p.avg) : "–"}</div>
-                  <div className="text-[11px] text-muted">avg · {p.gp} gp</div>
-                </div>
-              </div>
-              {live && team ? (
-                <ActionForm
-                  action={(p.onWaivers ? claimAction : addPlayerAction).bind(null, id, p.id)}
-                  className="mt-2 flex items-center gap-2"
-                  inline
-                >
-                  {full || p.onWaivers ? (
-                    <select name="drop" className="input !w-auto !py-1 text-xs" required={full} aria-label="Player to drop">
-                      <option value="">{full ? "Drop…" : "No drop"}</option>
-                      {roster.map((r) => (
-                        <option key={r.player.id} value={r.player.id}>{r.player.name}</option>
-                      ))}
-                    </select>
-                  ) : null}
-                  <SubmitButton className="btn btn-primary btn-sm">{p.onWaivers ? "Claim" : "Add"}</SubmitButton>
-                </ActionForm>
-              ) : null}
-            </li>
-          ))}
-          {pool.length === 0 ? <li className="px-3 py-6 text-center text-sm text-muted">No players match.</li> : null}
-        </ul>
-      </section>
-      {!live ? <p className="text-center text-xs text-muted">Adds open after the draft. <Link className="underline" href={`/league/${id}/draft`}>Draft room</Link></p> : null}
-    </div>
+      <div className="sec">
+        <span>Available players{full ? " · roster full, pick a drop" : ""}</span>
+        <div className="cols"><span>GP</span><span>AVG</span><span style={{ width: 76 }} /></div>
+      </div>
+      {pool.map((p) => (
+        <div key={p.id} className="rrow">
+          <span className="slot" style={{ width: 56 }}>{p.position ?? "–"}</span>
+          <PlayerAvatar name={p.name} src={p.imageUrl} team={p.teamAbbr} size={52} />
+          <div className="who">
+            <div className="nm">
+              <a>{abbrevName(p.name)}</a>
+              <span className="tm">{p.teamAbbr}</span>
+              {p.injuryStatus ? <span className="inj">{p.injuryStatus}</span> : null}
+              {p.onWaivers ? <span className="tag warn">Waivers</span> : null}
+            </div>
+            <div className="l2">Avg {p.gp ? fmt1(p.avg) : "–"} FPTS | {p.gp} GP</div>
+          </div>
+          <div className="rstats"><span>{p.gp}</span><span>{p.gp ? fmt1(p.avg) : "–"}</span></div>
+          <div className="rpts" style={{ minWidth: 76 }}>
+            {live && team ? (
+              <ActionForm action={(p.onWaivers ? claimAction : addPlayerAction).bind(null, id, p.id)} inline>
+                {full || p.onWaivers ? (
+                  <select name="drop" className="input !mb-1 !py-1 text-xs" required={full} aria-label="Player to drop">
+                    <option value="">{full ? "Drop…" : "No drop"}</option>
+                    {roster.map((r) => (<option key={r.player.id} value={r.player.id}>{r.player.name}</option>))}
+                  </select>
+                ) : null}
+                <SubmitButton className={`pill sm ${p.onWaivers ? "" : "solid"}`}>{p.onWaivers ? "Claim" : "Add"}</SubmitButton>
+              </ActionForm>
+            ) : null}
+          </div>
+        </div>
+      ))}
+      {pool.length === 0 ? <div className="pad text-center text-sm text-muted">No players match.</div> : null}
+      {!live ? <p className="pad text-center text-xs text-muted">Adds open after the draft. <Link className="underline" href={`/league/${id}/draft`}>Draft room</Link></p> : null}
+    </>
   );
 }

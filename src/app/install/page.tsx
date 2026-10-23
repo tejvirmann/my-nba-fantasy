@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppHeader } from "@/components/AppHeader";
 
 export const metadata = { title: "Install · Hoops League" };
 
@@ -22,19 +22,20 @@ const STEPS = {
 
 export default function InstallPage() {
   return (
-    <main className="mx-auto max-w-xl px-4 py-8">
-      <Link href="/" className="text-sm text-brand-2">← Back</Link>
-      <h1 className="mb-1 mt-2 text-2xl font-extrabold text-brand">Install Hoops League</h1>
-      <p className="mb-5 text-sm text-muted">No App Store needed. The site installs like an app: its own icon, full-screen, and updates arrive automatically.</p>
+    <>
+    <AppHeader title="Install Hoops League" />
+    <main className="page pad" style={{ maxWidth: 640 }}>
+      <p className="mb-4 text-sm text-muted">No App Store needed. The site installs like an app: its own icon, full-screen, and updates arrive automatically.</p>
       {(Object.entries(STEPS) as [keyof typeof STEPS, string[]][]).map(([k, steps]) => (
-        <section key={k} className="card mb-3 p-4">
-          <h2 className="mb-2 font-bold capitalize">{k === "iphone" ? "iPhone / iPad" : k}</h2>
-          <ol className="list-decimal space-y-1 pl-5 text-sm">
+        <section key={k} className="card mb-3">
+          <div className="sec"><span>{k === "iphone" ? "iPhone / iPad" : k}</span></div>
+          <ol className="list-decimal space-y-1 p-4 pl-9 text-sm">
             {steps.map((s) => (<li key={s}>{s}</li>))}
           </ol>
         </section>
       ))}
       <p className="text-xs text-muted">Updates: when we deploy a new version, the installed app picks it up the next time you open it.</p>
     </main>
+    </>
   );
 }

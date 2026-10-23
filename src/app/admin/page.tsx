@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppHeader } from "@/components/AppHeader";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { FORMATS, isFormatEnabled } from "@/core/formats";
 import { adminOverview } from "@/server/admin";
@@ -13,14 +14,9 @@ export default async function AdminPage() {
   const { leagues, users, counts, sync } = await adminOverview();
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-16 pt-6">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-brand">Admin</h1>
-          <p className="text-sm text-muted">Game formats, users and data health</p>
-        </div>
-        <Link href="/" className="btn btn-ghost btn-sm">← Leagues</Link>
-      </header>
+    <>
+    <AppHeader title="Admin" subtitle="Game formats, users and data health" right={<Link href="/">Leagues</Link>} />
+    <main className="page pad">
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
@@ -32,7 +28,7 @@ export default async function AdminPage() {
                 <article key={l.id} className="card p-4">
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <Link href={`/league/${l.id}`} className="truncate font-bold text-brand-2 hover:underline">{l.name}</Link>
+                      <Link href={`/league/${l.id}`} className="truncate font-bold text-link hover:underline">{l.name}</Link>
                       <div className="text-xs text-muted">{l.teamCount} teams · {l.status} · code {l.inviteCode}</div>
                     </div>
                   </div>
@@ -94,7 +90,7 @@ export default async function AdminPage() {
                 <li key={u.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                   <span className="min-w-0 truncate">
                     {u.displayName}
-                    {u.isAdmin ? <span className="chip ml-2 bg-brand-2 text-white">Admin</span> : null}
+                    {u.isAdmin ? <span className="chip ml-2 bg-accent text-accent-ink">Admin</span> : null}
                   </span>
                   {u.id !== me.id ? (
                     <ActionForm action={toggleAdmin.bind(null, u.id, !u.isAdmin)} inline>
@@ -110,5 +106,6 @@ export default async function AdminPage() {
         </aside>
       </div>
     </main>
+    </>
   );
 }

@@ -13,8 +13,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <input className="input" name="password" type="password" placeholder="Password" autoComplete="current-password" required />
       <SubmitButton className="btn btn-primary w-full">Log in</SubmitButton>
       <div className="flex justify-between text-sm">
-        <Link href="/forgot-password" className="text-brand-2 underline">Forgot password?</Link>
-        <Link href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="text-brand-2 underline">Create account</Link>
+        <Link href="/forgot-password" className="text-link underline">Forgot password?</Link>
+        <Link href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="text-link underline">Create account</Link>
       </div>
     </ActionForm>
   );

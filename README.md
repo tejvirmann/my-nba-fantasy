@@ -2,7 +2,7 @@
 
 # 🏀 Hoops League
 
-**Private fantasy basketball for your friends, with Sleeper-style Lock-In scoring and a UI that isn't confusing.**
+**Private fantasy basketball for your friends: Sleeper-style Lock-In scoring in a clean ESPN Fantasy-style UI.**
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ecf8e?logo=supabase&logoColor=white) ![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel) ![PWA](https://img.shields.io/badge/PWA-installable-5a0fc8) ![Tests](https://img.shields.io/badge/tests-51%20passing-brightgreen)
 
@@ -22,11 +22,12 @@ A web app (installs to your phone's home screen like an app) for running a 3 to 
 | **Whole season** | Snake draft with a timer and auto-pick, lineups, add/drop, waivers (rolling priority), trades (optional commissioner approval), schedule, standings, and a playoff bracket. |
 | **Free data** | Stats and headshots from ESPN's public endpoints behind a swappable adapter, refreshed daily and by a **Refresh stats** button that shows who tapped it last. |
 | **Game formats** | Admins switch formats on and off at any point in the season. Betting, loans, FAAB and double-points weeks are registered and planned. |
-| **Phone and desktop** | Bottom tabs on phones, sidebar and two-column pages on desktop. |
+| **ESPN-style UI** | Green header, four tabs (Roster, Matchup, Players, League), week selector, big-headshot roster rows, and a three-column draft room. Works on phone and desktop. |
+| **Your color** | The green accent is adjustable per user in Account → Appearance, with automatic readable text colors. |
 
 ## Screenshots
 
-> Final mockups are added here once we pick a direction. Review the options in the **[mockup gallery](mockups/index.html)** and see the **[mockup plan](mockups/MOCKUP_PLAN.md)**.
+> Final screenshots are added here once we settle the design. Review the ESPN-based options in the **[mockup gallery](mockups/index.html)** (serve with `cd mockups && python3 -m http.server 4100`) and read the **[mockup plan](mockups/MOCKUP_PLAN.md)**.
 
 | Matchup | My team + Lock-In | Draft room |
 |---|---|---|
@@ -50,6 +51,8 @@ npm run dev                       # http://localhost:3000
 |---|---|---|
 | Built-in admin | username `admin`, password `password` | **Change it on `/account` before sharing the site.** |
 | Owner | any email in `ADMIN_EMAILS` | Becomes admin automatically on login |
+
+Pick your accent color any time in **Account → Appearance**.
 | Everyone else | email and password, set at sign-up | No reset flow by design: "Reach out to Tejvir" |
 
 > Turn off **Confirm email** in Supabase (Authentication → Providers → Email) so sign-up works instantly.
@@ -117,7 +120,7 @@ src/
   app/         pages, server actions, API routes, PWA manifest and icons
   components/  shared UI
 scripts/       sync, backfill, seed-admin, seed-demo, simulate, smoke, screenshots
-mockups/       design gallery (3 directions x 14 screens), plan, generator
+mockups/       ESPN-style design gallery (3 variations x 15 screens), plan, generator
 drizzle/       SQL migrations
 ```
 

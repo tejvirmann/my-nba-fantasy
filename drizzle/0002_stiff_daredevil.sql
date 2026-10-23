@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "accent_color" text;

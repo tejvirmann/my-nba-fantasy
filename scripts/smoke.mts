@@ -65,7 +65,7 @@ try {
   await draft.createDraft(league);
   await draft.startDraft(league);
   console.log("live draft room");
-  const room = await get(`/league/${leagueId}/draft`, a.cookie, 200, ["on the clock", "Best available"]);
+  const room = await get(`/league/${leagueId}/draft`, a.cookie, 200, ["on the clock", "Pick History"]);
   void room;
   for (let i = 0; i < 60; i++) {
     const d = await draft.getDraft(leagueId);
@@ -96,7 +96,7 @@ try {
 
   console.log("in-season pages");
   const home = await get(`/league/${leagueId}`, a.cookie, 200, ["Week ", "League scoreboard", "Refresh stats"]);
-  await get(`/league/${leagueId}/team`, a.cookie, 200, ["Starters", "Save lineup", "Auto-pick for me"]);
+  await get(`/league/${leagueId}/team`, a.cookie, 200, ["Starters", "Save lineup", "Auto Lock-In for me"]);
   await get(`/league/${leagueId}/team`, b.cookie, 200, ["Starters"]);
   await get(`/league/${leagueId}/players`, a.cookie, 200, ["Available players"]);
   await get(`/league/${leagueId}/players?q=lebron`, a.cookie, 200);

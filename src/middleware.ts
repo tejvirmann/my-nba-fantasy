@@ -10,7 +10,8 @@ const PUBLIC = ["/login", "/signup", "/forgot-password", "/auth", "/api/cron", "
  */
 export async function middleware(req: NextRequest) {
   const forwarded = new Headers(req.headers);
-  for (const h of ["x-uid", "x-email", "x-name"]) forwarded.delete(h);
+  for (const h of ["x-uid", "x-email", "x-name", "x-auth"]) forwarded.delete(h);
+  forwarded.set("x-auth", "1"); // tells server code the middleware ran, so a missing x-uid means signed out
 
   let res = NextResponse.next({ request: { headers: forwarded } });
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {

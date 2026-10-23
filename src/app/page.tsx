@@ -1,51 +1,48 @@
 import Link from "next/link";
+import { AppHeader } from "@/components/AppHeader";
 import { requireUser } from "@/server/auth";
 import { myLeagues } from "@/server/leagues";
 
-const STATUS: Record<string, string> = {
-  setup: "Setting up",
-  drafting: "Drafting",
-  active: "In season",
-  playoffs: "Playoffs",
-  complete: "Complete",
-};
+const STATUS: Record<string, string> = { setup: "Setting up", drafting: "Drafting", active: "In season", playoffs: "Playoffs", complete: "Complete" };
 
 export default async function Home() {
   const user = await requireUser();
   const leagues = await myLeagues(user.id);
   return (
-    <main className="mx-auto max-w-3xl px-4 pb-16 pt-6 lg:pt-12">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-brand">Hoops League</h1>
-          <p className="text-sm text-muted">Signed in as {user.displayName}</p>
-        </div>
-        <nav className="flex gap-2">
-          {user.isAdmin ? <Link href="/admin" className="btn btn-ghost btn-sm">Admin</Link> : null}
-          <Link href="/account" className="btn btn-ghost btn-sm">Account</Link>
-        </nav>
-      </header>
-
-      <h2 className="label mb-2">Your leagues</h2>
-      {leagues.length === 0 ? (
-        <div className="card p-6 text-center text-muted">You're not in a league yet. Create one or join with an invite code.</div>
-      ) : (
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {leagues.map((l) => (
-            <li key={l.id}>
-              <Link href={`/league/${l.id}`} className="card flex items-center justify-between p-4 hover:border-brand-2">
-                <span className="font-semibold">{l.name}</span>
-                <span className="chip bg-slate-100 text-slate-600">{STATUS[l.status] ?? l.status}</span>
+    <>
+      <AppHeader
+        title="Hoops League"
+        subtitle={`Signed in as ${user.displayName}`}
+        right={<><Link href="/install">Install</Link><Link href="/account">Account</Link>{user.isAdmin ? <Link href="/admin">Admin</Link> : null}</>}
+      />
+      <main className="page pad stack">
+        <h1 className="text-xl font-medium">Your leagues</h1>
+        {leagues.length === 0 ? (
+          <div className="card pad text-center text-muted">You&apos;re not in a league yet. Create one or join with an invite code.</div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {leagues.map((l) => (
+              <Link key={l.id} href={`/league/${l.id}`} className="card rrow hover:border-accent" style={{ background: "#fff" }}>
+                <span className="av" style={{ background: "var(--accent)", color: "var(--accent-ink)", boxShadow: "none" }}>{l.name.slice(0, 2).toUpperCase()}</span>
+                <div className="who">
+                  <div className="nm" style={{ fontWeight: 600 }}>{l.name}</div>
+                  <div className="l2">{STATUS[l.status] ?? l.status}</div>
+                </div>
+                <span className="text-xl text-muted">›</span>
               </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <Link href="/leagues/new" className="btn btn-primary">Create a league</Link>
-        <Link href="/join" className="btn btn-ghost">Join with a code</Link>
-      </div>
-    </main>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-3">
+          <Link href="/leagues/new" className="btn btn-primary grow">Create a league</Link>
+          <Link href="/join" className="btn grow">Join with a code</Link>
+        </div>
+        <Link href="/install" className="banner text-sm" style={{ textDecoration: "none" }}>
+          <span aria-hidden>📱</span>
+          <div className="flex-1"><b>Install on iPhone</b><div className="text-[13px] text-muted">Add it to your home screen for an app icon and full-screen mode.</div></div>
+          <span className="text-xl text-muted">›</span>
+        </Link>
+      </main>
+    </>
   );
 }
