@@ -1,26 +1,21 @@
-/* Direction C — "Arena": dark, high-contrast, big numerals, glassy cards, neon-lime accent. */
-:root{--bg:#090d16;--surface:#121826;--surface-2:#0e1420;--ink:#eef2fa;--muted:#8a94a8;--line:#222b3d;--brand:#c6ff3d;--brand-ink:#0b1200;--accent:#ff7a1a;--accent-ink:#1a0b00;--good:#3ddc97;--bad:#ff5d6c;--warn:#ffb020;--warn-ink:#ffb020;--chip-bg:#1b2335;--radius:16px;--btn-radius:12px;--topbar-bg:rgba(9,13,22,.85);--topbar-ink:#eef2fa;--nav-bg:rgba(18,24,38,.92);color-scheme:dark}
-.theme-c .topbar{backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.theme-c .logo{background:var(--brand);color:#0b1200}
-.theme-c .card{background:linear-gradient(180deg,#141b2b,#101624)}
-.theme-c .pos.G{background:#16294d;color:#7db1ff}.theme-c .pos.F{background:#12361f;color:#6ee79b}.theme-c .pos.C{background:#3a1419;color:#ff8791}.theme-c .pos.U{background:#2a1d4a;color:#b79bff}.theme-c .pos.BN{background:#1b2335;color:#8a94a8}
-.theme-c .bottomnav{margin:0 12px 12px;border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(14px)}
-.theme-c .bottomnav a.on{color:var(--brand)}
-.theme-c .btn.primary{box-shadow:0 0 0 1px rgba(198,255,61,.5),0 8px 24px rgba(198,255,61,.18)}
-.theme-c .toggle.on{background:var(--brand)}
-.theme-c .tbl th{background:#0e1420}
-@media(min-width:1024px){
-  .theme-c .bottomnav{display:none}
-  .theme-c .topbar{padding:12px 32px}
-  .theme-c .topbar .toptabs{display:flex;gap:4px;margin:0 auto}
-  .theme-c .toptabs a{padding:8px 15px;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted)}
-  .theme-c .toptabs a.on{background:var(--brand);color:var(--brand-ink)}
-  .theme-c .main{padding-bottom:48px}
-}
-.theme-c .hero-c{border:1px solid var(--line);border-radius:22px;background:radial-gradient(120% 140% at 50% -20%,#1d2a4a,#0e1420 60%);padding:20px 16px;text-align:center}
-.theme-c .hero-c .grid{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:center}
-.theme-c .hero-c .score{font-size:clamp(34px,10.5vw,58px);font-weight:800;letter-spacing:-.04em;line-height:1}
-.theme-c .hero-c .score.lead{color:var(--brand);text-shadow:0 0 28px rgba(198,255,61,.35)}
-.theme-c .hero-c .tname{font-size:12px;font-weight:800;color:var(--muted);margin-top:6px}
-.theme-c .winbar{height:8px;border-radius:8px;background:#222b3d;overflow:hidden;display:flex;margin:14px 0 4px}
-.theme-c .winbar i{display:block;background:var(--brand)}
+/* C · Compact: table-first for power users. Slim header, tight rows, stat columns always visible, accent-colored links. */
+:root{--link:var(--accent-text)}
+.theme-c .hdr{min-height:44px;padding-top:6px;padding-bottom:6px}.theme-c .hdr .logo{width:26px;height:26px}.theme-c .hdr .ttl{font-size:15px}
+.theme-c .tabs a{padding:11px 2px 9px;font-size:13px;letter-spacing:.06em;font-weight:700;border-bottom-width:3px}
+.theme-c .rrow{padding:6px 12px;gap:10px}
+.theme-c .slot{width:50px;padding:5px 0;font-size:12px}
+.theme-c .av{width:36px;height:36px;font-size:12px;box-shadow:none}
+.theme-c .who .nm{font-size:14px;font-weight:600}.theme-c .who .l2{display:none}.theme-c .who .l3{font-size:12px;margin-top:1px}
+.theme-c .rstats{display:flex}.theme-c .rstats span{width:30px;font-size:12px}
+.theme-c .rpts{min-width:50px}.theme-c .rpts b{font-size:17px;font-weight:700}.theme-c .rpts small{display:none}
+.theme-c .rrow:nth-child(even),.theme-c .mrow:nth-child(even){background:#f3f4f6}
+.theme-c .sec{padding:8px 12px;font-size:12px}
+.theme-c .weekbar{padding:6px 12px}.theme-c .weekbar a.wk{font-size:15px}
+.theme-c .toolbar{padding:8px 12px}.theme-c .pill{padding:5px 12px;font-size:13px}
+.theme-c .mhead{padding:12px}.theme-c .mscore{font-size:28px;font-weight:600}
+.theme-c .mcell{padding:6px 10px}.theme-c .mcell .p{font-size:15px;font-weight:700}.theme-c .mcell .s{display:none}
+.theme-c .tbl td,.theme-c .tbl th{padding:6px 10px}
+@media(min-width:960px){.theme-c .rstats span{width:46px;font-size:13px}.theme-c .who .l2{display:block}}
+
+.theme-c .sec .cols{display:flex}.theme-c .sec .cols span{width:30px}.theme-c .sec .cols span:last-child{width:50px}
+@media(min-width:960px){.theme-c .sec .cols span{width:46px}.theme-c .sec .cols span:last-child{width:68px}}

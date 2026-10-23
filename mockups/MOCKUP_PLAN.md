@@ -1,100 +1,102 @@
-# Mockup plan: finding the look and feel
+# Mockup plan: Clean (decided)
 
-**Goal:** land on one design direction for Hoops League that feels like a good fantasy-football app (clear, scannable, not confusing like Sleeper), works equally well on a phone and a laptop, and then apply it to the real app.
+**Decision (Oct 2026):** the **Clean** look is the app's look: ESPN Fantasy's structure (4 tabs, week bar, slot, headshot, 3-line rows, wide desktop roster table) in a quieter skin: white surfaces, hairline dividers, Inter, dark player names, and the user's accent color only on the logo mark, active tab and main buttons. Variants A (faithful), B (minimal), C (compact) and the A1/A2/A3 refinements were explored and dropped.
 
-Open **[index.html](index.html)** in a browser to review everything. Toggle Mobile / Desktop at the top, mark a preference per screen, add notes, then press **Copy my picks** and paste the result into chat.
+Review in the browser at **http://127.0.0.1:4100/index.html** (`cd mockups && python3 -m http.server 4100 --bind 127.0.0.1`, regenerate with `npx tsx mockups/build.mts`). The real app implements these screens (`mockups/current/` has its screenshots).
 
-## What is in this folder
+## Decisions
 
-| Path | What it is |
+| Topic | Decision |
 |---|---|
-| `index.html` | Gallery: every screen in 3 directions, phone and desktop, with pick buttons and notes |
-| `screens/<screen>-<a\|b\|c>.html` | The individual mockups. Static, responsive, open any one on its own |
-| `assets/base.css` | Shared layout and components (cards, rows, chips, tables, sheets) |
-| `assets/a.css`, `b.css`, `c.css` | One file per visual direction. Only colors, shape, and a few overrides |
-| `lib.mts`, `screens.mts`, `build.mts` | Generator. Edit data or markup once, run `npx tsx mockups/build.mts` |
-| `shoot.mts` | Renders every page to `png/` (`npx tsx mockups/shoot.mts`); also fails loudly on mobile horizontal overflow |
-| `current/` | Screenshots of the **real app today** (phone and desktop), plus `baseline/` from before the responsive pass |
+| Look | Clean (`mockups/assets/refined.css`, ported into `src/app/globals.css`) |
+| Auto Lock-In | Toggle on the roster. Open mode: highest game counts. Strict mode: locks the first game at or above a threshold (a true "highest" is impossible when games lock before the next tip-off) |
+| Matchup | Swipe strip of every matchup this week; tap one to open that lineup (other benches hidden) |
+| Draft room | Headshot + FPTS, HIGH game, PTS/REB/AST/STL/BLK in the table; click a player for a card with season averages and last 5 games |
+| Desktop roster | ESPN team page: team card with last/current matchup, Set lineup bar, table with OPP, STATUS, SCORE, OPRK (opponent defense rank vs position), PRK, FPTS, AVG, LAST |
+| Install | A tab in the League sub-nav, a header link and a tappable banner on the home screen |
+| Color | Every user picks their own in Account; default green; only they see it |
+| Dark mode | Not planned |
 
-## The three directions
+## Earlier exploration (for reference)
 
-| | A · Broadcast | B · Clean Cards | C · Arena |
+## What we took from the ESPN baseline
+
+| Pattern | Where it shows up |
+|---|---|
+| Green title bar | Header on every screen. Color is the user's accent (default `#0c8312`, sampled from the screenshot) |
+| 4 text tabs with a thick underline on the active one | ROSTER · MATCHUP · PLAYERS · LEAGUE. Trades, Activity, Draft, Settings and Standings live under LEAGUE as a pill sub-nav, so nothing is crowded |
+| Week selector with chevrons | Roster and Matchup (`‹ Week 3 ›`) |
+| Gray toolbar with outlined pill buttons | Auto-pick, Matchup, Find players |
+| Roster row | Outlined **slot pill** (lock icon once locked), large round headshot, short name (`J. Brown`) with team and position, `Wk 49.6 \| Avg 41.2`, and `vs CLE, W 118-104` |
+| Light striping, hairline dividers, section headers in caps | Every list |
+| Draft room | Green header, dark-green **pick strip** with the clock and upcoming picks, then three columns: queue and roster, players table, picks list |
+
+## The three variations (all ESPN-based)
+
+| | A · Faithful | B · Minimal | C · Compact |
 |---|---|---|---|
-| Inspired by | ESPN Fantasy | Yahoo Fantasy | Sports-betting and live-score apps |
-| Mood | Newsroom: dense, authoritative | Friendly and roomy | Game night: dark, big numbers |
-| Colors | Black title bar, red accent | White and purple, pink pop | Near-black, lime accent |
-| Desktop nav | Top tabs under a dark bar | Left sidebar | Pill tabs in the top bar |
-| Mobile nav | Bottom tabs | Bottom tabs with icons | Floating bottom pill |
-| Players | Sortable-looking table | Large rows with chips | Compact dark rows |
-| Strength | Most data per screen | Easiest for new players | Most dramatic scoreboard |
-| Risk | Can feel heavy on a phone | Less dense for power users | Dark-only; glare in sunlight |
+| Idea | The baseline exactly | Same structure, far less chrome | Table-first for power users |
+| Header | Green bar | White bar, accent only on the logo | Slim green bar |
+| Rows | Striped, outlined slot pills, blue links | No striping, plain slot labels, black names | Tight rows, stat columns always visible, accent links |
+| Best for | Familiarity | Calm, modern, lots of whitespace | Heavy users who scan many numbers |
 
-We take interaction patterns from these apps (matchup header, slot labels, roster rows, tabs). We do **not** copy their logos, names, colors, or assets.
+## Screens (15)
 
-## Screen inventory
+Log in · My leagues · Roster + Lock-In · Lock-In sheet · Matchup · Players · League: standings and bracket · League: trades · League: activity and waivers · Draft room · League: bets (future) · League: settings · Account and appearance · Admin: game formats · Install on iPhone.
 
-| # | Screen | In the app today | Notes for the design review |
-|---|---|---|---|
-| 1 | Log in / sign up | yes | Username or email; no reset flow by design |
-| 2 | My leagues | yes | Create / join, install prompt |
-| 3 | Matchup (home) | yes | The most-used screen. Hero style differs per direction |
-| 4 | My team + Lock-In | yes | The core interaction: lineup plus the Lock button |
-| 5 | Lock-In sheet | partly (inline button today) | Bottom sheet with the strict-mode deadline |
-| 6 | Players / free agents | yes | Add vs Claim |
-| 7 | Waivers | partly | Pending claims and priority order |
-| 8 | Draft room | yes | Clock, best available, picks, board grid |
-| 9 | Trades | yes | Offer builder and history |
-| 10 | Standings + playoffs | yes | Bracket is new visually |
-| 11 | League + commissioner | yes | Invite, rules, scoring |
-| 12 | Admin: game formats | yes | Switch formats any time |
-| 13 | Bets and parlays | future | Play money, loser lends a player |
-| 14 | Install on iPhone | yes | Add to Home Screen walkthrough |
+## The color setting
 
-## Discovery process (4 rounds)
+- **Where:** Account → Appearance. Nine swatches (ESPN green first) plus a custom color picker, **Save color** and **Reset to ESPN green**.
+- **Behavior:** previews instantly across the whole app, saved on your account, applied on every device you log in from.
+- **Readability is automatic:** the text color on the accent (white or near-black) and the version of the accent used for links on white are derived from the chosen color, so even yellow stays legible. This is unit-tested.
+- **In the gallery:** the Accent swatches at the top restyle every mockup at once.
 
-1. **Gut check (10 min).** In the gallery, pick A, B, C, Mix, or None on each screen. No overthinking; notes are optional.
-2. **Mix the parts.** Wherever you answered "Mix", we combine specific elements. The questions below settle most of it.
-3. **Real-data pass.** Apply the winner to the actual app using the demo league, compare against `current/` screenshots, and adjust density and spacing on real content (long names, injuries, 0-point games).
-4. **States and polish.** Design what mockups usually skip: empty, loading, error, live game, offline, first-run, and the champion screen. Then add the final screenshots to the README.
+## Discovery process
+
+1. **Gut check (10 min).** Pick A, B, C, Mix or None per screen in the gallery.
+2. **Mix.** Combine specific elements where you answered "Mix" (see questions below).
+3. **Real-data pass.** The real app already follows variation A (see `mockups/current/`). We compare it with your picks and adjust density and spacing on real content.
+4. **States and polish.** Empty, loading, error, live game, offline, first run, champion screen. Then final screenshots go in the README.
 
 ## Questions to answer
 
-| Topic | Options | Where to look |
-|---|---|---|
-| Navigation | Bottom tabs everywhere, sidebar on desktop, or top tabs | Matchup in A / B / C, desktop view |
-| Density | Dense table, balanced rows, or roomy cards | Players (A is a table, B and C are lists) |
-| Scoreboard hero | Dark strip with a split bar, purple card, or giant glowing numbers | Matchup |
-| Theme | Light, dark, or a user toggle | A and B vs C |
-| Lock-In | Inline Lock button on each game, or a confirmation sheet | My team vs Lock-In sheet |
-| Player images | Real headshots, or initials on team color | Mockups use initials; the real app uses headshots with initials as fallback |
-| Brand color | Red, purple, lime, or something custom | All screens |
-| Phone first or desktop first | Which device do you and your friends actually use? | Toggle in the gallery |
+| Topic | Options |
+|---|---|
+| Header | Green bar (A, C) or white bar (B) |
+| Links and names | ESPN blue (A), black (B), accent (C) |
+| Row density | Roomy (B), baseline (A), tight with stat columns (C) |
+| Slot pills | Outlined pills (A), plain text (B) |
+| Lock-In | Lock pill that opens a sheet (current), or an inline game picker on the row |
+| Draft queue | Add the ESPN-style pick queue with auto-draft from the queue |
+| Dark mode | Not planned. Do you want it? |
 
-## Decision log (fill in as we go)
+## Decision log
 
 | Decision | Choice | Date |
 |---|---|---|
-| Overall direction | _tbd_ | |
-| Navigation | _tbd_ | |
-| Theme (light / dark / toggle) | _tbd_ | |
-| Brand color | _tbd_ | |
-| Lock-In interaction | _tbd_ | |
+| Overall variation (A / B / C / mix) | _tbd_ | |
+| Header style | _tbd_ | |
+| Link color | _tbd_ | |
+| Density | _tbd_ | |
+| Dark mode | _tbd_ | |
 
-## Screens still to design after round 1
+## Not built yet (design first)
 
-Empty states (no leagues, no players), loading skeletons, first-run onboarding, player detail drawer (game log), notifications center, commissioner trade review, draft pick queue, season recap and champion screen, bet history, loan tracker, and the phone home-screen icon and splash.
+Pick queue and auto-draft from queue, player detail drawer with game log, notifications center, commissioner trade review screen, empty and loading states, season recap and champion screen, bets and loans (formats are registered; screen is mocked).
 
-## Design rules we hold regardless of direction
+## Folder map
 
-- Touch targets at least 44 px; inputs at 16 px so iOS does not zoom.
-- Text contrast of at least 4.5:1 in every theme.
-- Safe-area padding for the iPhone notch and home bar.
-- Never rely on color alone for status (chips carry a label).
-- One primary action per screen.
+| Path | What |
+|---|---|
+| `index.html` | Gallery with accent control, phone/desktop toggle, picks and notes |
+| `screens/<screen>-<a\|b\|c>.html` | Individual responsive mockups; the tabs link between screens |
+| `assets/base.css` | The ESPN-style kit (header, tabs, rows, pills, tables, draft room) |
+| `assets/a.css` `b.css` `c.css` | Variation overrides only |
+| `assets/accent.js` | Applies the saved accent to a mockup |
+| `lib.mts` `screens.mts` `build.mts` | Generator: edit once, run `npx tsx mockups/build.mts` |
+| `shoot.mts` | Renders every page to `png/` and fails on mobile overflow |
+| `current/` | Screenshots of the real app (`npx tsx scripts/screenshots.mts mockups/current`) |
 
-## From mockup to the real app
+## Design rules
 
-1. Move the winning palette and radii into design tokens in `src/app/globals.css`.
-2. Rebuild the shell (`src/app/league/[id]/layout.tsx`, `LeagueNav`) to the chosen navigation.
-3. Restyle shared pieces once (`.card`, `.btn`, `.chip`, player rows), and the pages inherit it.
-4. Re-run `npx tsx scripts/screenshots.mts mockups/current` and compare side by side with the mockups.
+Touch targets at least 44 px, inputs 16 px (no iOS zoom), 4.5:1 text contrast on any accent, safe-area padding on iPhone, status never shown by color alone, one primary action per screen.
