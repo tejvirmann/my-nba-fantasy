@@ -7,7 +7,7 @@ import { requireUser } from "@/server/auth";
 import { changePassword, logout } from "../(auth)/actions";
 import { saveAccent } from "./actions";
 
-export const metadata = { title: "Account · Hoops League" };
+export const metadata = { title: "Account · DS Hoops League" };
 
 export default async function AccountPage() {
   const user = await requireUser();

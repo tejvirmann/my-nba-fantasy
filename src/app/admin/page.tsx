@@ -7,7 +7,7 @@ import { requireAdmin } from "@/server/auth";
 import { ago } from "@/server/page";
 import { forceSync, toggleAdmin, toggleFormat } from "./actions";
 
-export const metadata = { title: "Admin · Hoops League" };
+export const metadata = { title: "Admin · DS Hoops League" };
 
 export default async function AdminPage() {
   const me = await requireAdmin();

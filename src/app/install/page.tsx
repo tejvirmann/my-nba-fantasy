@@ -1,13 +1,13 @@
 import { AppHeader } from "@/components/AppHeader";
 
-export const metadata = { title: "Install · Hoops League" };
+export const metadata = { title: "Install · DS Hoops League" };
 
 const STEPS = {
   iphone: [
     "Open this site in Safari (it must be Safari, not Chrome, on iPhone).",
     "Tap the Share button at the bottom of the screen.",
     "Scroll down and tap “Add to Home Screen”.",
-    "Tap Add. The Hoops League icon now sits on your home screen and opens full-screen like an app.",
+    "Tap Add. The DS Hoops League icon now sits on your home screen and opens full-screen like an app.",
   ],
   android: [
     "Open this site in Chrome.",
@@ -23,7 +23,7 @@ const STEPS = {
 export default function InstallPage() {
   return (
     <>
-    <AppHeader title="Install Hoops League" />
+    <AppHeader title="Install DS Hoops League" />
     <main className="page pad" style={{ maxWidth: 640 }}>
       <p className="mb-4 text-sm text-muted">No App Store needed. The site installs like an app: its own icon, full-screen, and updates arrive automatically.</p>
       {(Object.entries(STEPS) as [keyof typeof STEPS, string[]][]).map(([k, steps]) => (

@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ size: stri
             fontWeight: 800,
           }}
         >
-          HL
+          DS
         </div>
       </div>
     ),

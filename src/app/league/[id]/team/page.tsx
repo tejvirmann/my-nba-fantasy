@@ -3,6 +3,8 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { LockIcon } from "@/components/LockIcon";
+import { TeamLogo } from "@/components/TeamLogo";
+import { TeamPictureForm } from "@/components/TeamPictureForm";
 import { LockSheet, type LockGame } from "@/components/LockSheet";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { RefreshBar } from "@/components/RefreshBar";
@@ -15,7 +17,7 @@ import { defenseRanks, ordinal } from "@/server/playerStats";
 import { playerRankings } from "@/server/rankings";
 import { orderLineup } from "@/server/lineup";
 import { fmt1, gameTime, leagueContext } from "@/server/page";
-import { dropPlayerAction, lockAction, renameTeam, saveAutoLock, saveLineup } from "../actions";
+import { dropPlayerAction, lockAction, removeTeamPicture, renameTeam, saveAutoLock, saveLineup, saveTeamPicture } from "../actions";
 
 export default async function RosterPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ week?: string }> }) {
   const { id } = await params;
@@ -43,6 +45,7 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
   // Season rank by average fantasy points, across every player we have box scores for.
   const rankOf = new Map([...ranks.entries()].sort((a, b) => b[1].avg - a[1].avg).map(([espn], i) => [espn, i + 1]));
   const teamName = new Map(view.teams.map((t) => [t.team.id, t.team.name]));
+  const teamById = new Map(view.teams.map((t) => [t.team.id, t.team]));
   const totalOf = new Map(view.teams.map((t) => [t.team.id, t.total]));
   const mineStanding = standings.find((x) => x.teamId === team.id);
   const place = standings.findIndex((x) => x.teamId === team.id) + 1;
@@ -76,7 +79,7 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
         action: lockAction.bind(null, id, p.playerId, g.gameId),
       }));
     const lockedBy = p.lock ? (p.lock.source === "auto" ? "auto-locked" : "locked by you") : null;
-    const state = !p.isStarter ? "benched" : lockedBy ?? (cg ? (autoOn && s.lockMode === "open" ? "best so far" : "latest") : "—");
+    const state = !p.isStarter ? "benched" : lockedBy ?? (p.resolution.counted?.source === "auto" && p.resolution.lockableGameIds.length === 0 ? "auto-locked" : null) ?? (cg ? (autoOn && s.lockMode === "open" ? "best so far" : "latest") : "—");
     const nextG = p.games.find((g) => g.status !== "final");
     const opp = nextG?.label ?? "–";
     const when = nextG ? (nextG.status === "live" ? "Live" : gameTime(nextG.start, league.timezone)) : "–";
@@ -127,6 +130,8 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
           <div className="act cx-act">
             {p.lock ? (
               <span className="tag good"><LockIcon />Locked</span>
+            ) : p.isStarter && p.resolution.counted?.source === "auto" && p.resolution.lockableGameIds.length === 0 ? (
+              <span className="tag good"><LockIcon />Auto-locked</span>
             ) : lockable ? (
               <LockSheet player={p.name} games={sheetGames} note={modeNote} auto={autoOn} />
             ) : null}
@@ -144,8 +149,8 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
       <div>
         <div className="cap">{label}</div>
         <div className="mbox">
-          <div className="mt"><span className="av sm" style={{ background: "#555b64" }}>{(oppId ? teamName.get(oppId) ?? "" : "BYE").slice(0, 2).toUpperCase()}</span><span>{oppId ? teamName.get(oppId) : "Bye week"}</span><b className={theirs > mine ? "" : "mut"}>{oppId ? fmt1(theirs) : "—"}</b></div>
-          <div className="mt"><span className="av sm" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>{team.name.slice(0, 2).toUpperCase()}</span><span>{team.name}</span><b className={mine >= theirs ? "" : "mut"}>{fmt1(mine)}</b></div>
+          <div className="mt">{oppId && teamById.get(oppId) ? <TeamLogo team={teamById.get(oppId)!} size={32} /> : <span className="av sm" style={{ background: "#555b64" }}>BY</span>}<span>{oppId ? teamName.get(oppId) : "Bye week"}</span><b className={theirs > mine ? "" : "mut"}>{oppId ? fmt1(theirs) : "—"}</b></div>
+          <div className="mt"><TeamLogo team={team} size={32} /><span>{team.name}</span><b className={mine >= theirs ? "" : "mut"}>{fmt1(mine)}</b></div>
         </div>
       </div>
     );
@@ -155,7 +160,7 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
     <>
       <div className="dcard only-d">
         <div className="tmhead">
-          <span className="tmlogo">{team.name.slice(0, 2).toUpperCase()}</span>
+          <TeamLogo team={team} size={72} />
           <div className="grow">
             <div className="tmname">{team.name} <small>{mineStanding ? `${mineStanding.wins}-${mineStanding.losses}${mineStanding.ties ? `-${mineStanding.ties}` : ""}` : "0-0"} <span className="mut">({ordinal(place || 1)} of {standings.length})</span></small></div>
             <div className="tmlinks"><span>{league.name}</span><i /><Link href={`/league/${id}/standings`}>Standings</Link><i /><Link href={`/league/${id}/activity`}>Waivers</Link><i /><Link href={`/league/${id}/players`}>Find players</Link></div>
@@ -242,6 +247,19 @@ export default async function RosterPage({ params, searchParams }: { params: Pro
           <div style={{ marginTop: 6 }}>{modeNote}</div>
         </div>
         <RefreshBar leagueId={id} />
+        {!readOnly ? (
+          <div className="card">
+            <div className="sec"><span>Team picture</span></div>
+            <div className="pad">
+              <TeamPictureForm
+                saveAction={saveTeamPicture.bind(null, id)}
+                removeAction={removeTeamPicture.bind(null, id)}
+                currentSrc={team.logoUpdatedAt ? `/api/team-logo/${team.id}?v=${team.logoUpdatedAt.getTime()}` : null}
+                initials={team.name.slice(0, 2).toUpperCase()}
+              />
+            </div>
+          </div>
+        ) : null}
         <ActionForm action={renameTeam.bind(null, id)} className="card pad flex items-center gap-2">
           <input name="name" defaultValue={team.name} className="input" maxLength={40} aria-label="Team name" />
           <SubmitButton className="btn btn-sm">Rename</SubmitButton>

@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { TeamLogo } from "@/components/TeamLogo";
 import { standingsFor } from "@/server/engine";
 import { fmt1, leagueContext } from "@/server/page";
 
@@ -8,6 +9,7 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
   const { league, team } = await leagueContext(id);
   const { teams, standings } = await standingsFor(id);
   const name = new Map(teams.map((t) => [t.id, t.name]));
+  const byId = new Map(teams.map((t) => [t.id, t]));
   const matchups = await db.select().from(schema.matchups).where(eq(schema.matchups.leagueId, id));
   const playoff = matchups.filter((m) => m.isPlayoff).sort((a, b) => (a.round ?? 0) - (b.round ?? 0));
   const cut = Math.min(league.playoffTeams, teams.length);
@@ -27,7 +29,7 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
               {standings.map((s, i) => (
                 <tr key={s.teamId} className={s.teamId === mine ? "hl" : ""} style={i === cut - 1 ? { boxShadow: "inset 0 -2px 0 var(--accent)" } : undefined}>
                   <td><b>{i + 1}</b></td>
-                  <td className="tn"><b style={{ fontWeight: 600 }}>{name.get(s.teamId)}</b>{s.teamId === mine ? <span className="tag acc" style={{ marginLeft: 6 }}>You</span> : null}</td>
+                  <td className="tn"><span className="row" style={{ gap: 8 }}><TeamLogo team={byId.get(s.teamId)!} size={26} /><b style={{ fontWeight: 600 }}>{name.get(s.teamId)}</b></span>{s.teamId === mine ? <span className="tag acc" style={{ marginLeft: 6 }}>You</span> : null}</td>
                   <td className="c tnum">{s.wins}-{s.losses}{s.ties ? `-${s.ties}` : ""}</td>
                   <td className="r tnum">{fmt1(s.pointsFor)}</td>
                   <td className="r tnum">{fmt1(s.pointsAgainst)}</td>

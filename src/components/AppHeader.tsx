@@ -4,7 +4,7 @@ import Link from "next/link";
 export function AppHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
     <header className="hdr">
-      <Link href="/" className="logo" aria-label="All leagues">HL</Link>
+      <Link href="/" className="logo" aria-label="All leagues">DS</Link>
       <div className="ttl">
         {title}
         {subtitle ? <small>{subtitle}</small> : null}

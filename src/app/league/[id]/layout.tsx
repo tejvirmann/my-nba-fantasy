@@ -17,7 +17,7 @@ export default async function LeagueLayout({ children, params }: { children: Rea
   return (
     <div className="min-h-dvh">
       <header className="hdr">
-        <Link href="/" className="logo" aria-label="All leagues">HL</Link>
+        <Link href="/" className="logo" aria-label="All leagues">DS</Link>
         <div className="ttl">
           {league.name}
           <small>{team ? `${team.name} · ` : ""}{status}</small>

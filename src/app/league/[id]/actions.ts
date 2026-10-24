@@ -12,6 +12,7 @@ import { settleAll } from "@/server/settle";
 import { addFreeAgent, dropPlayer, setLineup } from "@/server/roster";
 import { cancelClaim, processLeagueWaivers, submitClaim } from "@/server/waivers";
 import { autoPickExpired, commissionerAutoPick, createDraft, makePick, setDraftPaused, startDraft } from "@/server/draft";
+import { clearTeamLogo, setTeamLogo } from "@/server/teamLogo";
 import { cancelTrade, commissionerReview, proposeTrade, respondToTrade } from "@/server/trades";
 
 type State = { error?: string; message?: string };
@@ -59,6 +60,24 @@ export async function saveLineup(leagueId: string, _: State, form: FormData): Pr
       .map(([k, v]) => ({ playerId: k.slice(5), slot: String(v) }));
     await setLineup({ league: m.league, teamId: m.team.id, userId: user.id, assignments });
     return "Lineup saved.";
+  });
+}
+
+export async function saveTeamPicture(leagueId: string, _: State, form: FormData): Promise<State> {
+  return run(leagueId, async () => {
+    const user = await requireUser();
+    const m = await requireTeam(user.id, leagueId); // your own team only
+    await setTeamLogo(m.team.id, str(form, "picture"));
+    return "Picture saved.";
+  });
+}
+
+export async function removeTeamPicture(leagueId: string, _: State, __: FormData): Promise<State> {
+  return run(leagueId, async () => {
+    const user = await requireUser();
+    const m = await requireTeam(user.id, leagueId);
+    await clearTeamLogo(m.team.id);
+    return "Picture removed.";
   });
 }
 

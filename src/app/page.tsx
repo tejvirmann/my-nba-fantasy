@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <>
       <AppHeader
-        title="Hoops League"
+        title="DS Hoops League"
         subtitle={`Signed in as ${user.displayName}`}
         right={<><Link href="/install">Install</Link><Link href="/account">Account</Link>{user.isAdmin ? <Link href="/admin">Admin</Link> : null}</>}
       />

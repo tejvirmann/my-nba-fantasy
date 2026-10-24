@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hoops League",
-    short_name: "Hoops",
+    name: "DS Hoops League",
+    short_name: "DS Hoops",
     description: "Private fantasy basketball with Lock-In scoring.",
     start_url: "/",
     display: "standalone",

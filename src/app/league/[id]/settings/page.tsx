@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { TeamLogo } from "@/components/TeamLogo";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import type { ScoringWeights } from "@/core/types";
 import { leagueContext } from "@/server/page";
@@ -26,7 +27,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ id: s
         <div className="label">Invite code</div>
         <div className="text-2xl font-extrabold tracking-[0.3em] text-link">{league.inviteCode}</div>
         <ul className="mt-3 divide-y divide-line text-sm">
-          {teams.map((t) => (<li key={t.id} className="py-1.5">{t.name}{t.ownerId === league.commissionerId ? <span className="tag ml-2">Commissioner</span> : null}</li>))}
+          {teams.map((t) => (<li key={t.id} className="row py-1.5" style={{ gap: 10 }}><TeamLogo team={t} size={28} />{t.name}{t.ownerId === league.commissionerId ? <span className="tag ml-2">Commissioner</span> : null}</li>))}
         </ul>
         </div>
       </section>

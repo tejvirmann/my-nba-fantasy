@@ -7,9 +7,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Hoops League",
+  title: "DS Hoops League",
   description: "A private fantasy basketball league with Lock-In scoring.",
-  appleWebApp: { capable: true, title: "Hoops League", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "DS Hoops League", statusBarStyle: "black-translucent" },
   icons: { apple: "/pwa-icon/180" },
 };
 

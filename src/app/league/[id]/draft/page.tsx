@@ -5,6 +5,7 @@ import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { Countdown } from "@/components/Countdown";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { TeamLogo } from "@/components/TeamLogo";
 import { pickInfo, totalPicks } from "@/core/draft";
 import { abbrevName } from "@/lib/names";
 import { autoPickExpired, draftBoard, getDraft } from "@/server/draft";
@@ -165,9 +166,10 @@ export default async function DraftPage({
 
         <section className="dr-col">
           <div className="dr-headline">
-            <span className="av lg" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>
-              {(onClock ? name.get(onClock.teamId)! : team?.name ?? "HL").slice(0, 2).toUpperCase()}
-            </span>
+            {(() => {
+              const t = teams.find((x) => x.id === (onClock?.teamId ?? team?.id));
+              return t ? <TeamLogo team={t} size={64} /> : <span className="av lg">DS</span>;
+            })()}
             <div>
               <b>{myTurn ? "You're on the clock!" : onClock ? `${name.get(onClock.teamId)} is on the clock` : done ? "Draft complete" : "Draft room"}</b>
               <span>{onClock ? `Round ${onClock.round}, Pick ${draft.currentPick}` : `${board.length} picks made`}</span>
@@ -187,7 +189,7 @@ export default async function DraftPage({
                   <option value="F">F</option>
                   <option value="C">C</option>
                 </select>
-                <input name="q" defaultValue={q ?? ""} placeholder="Player name" className="input" style={{ maxWidth: 260 }} aria-label="Search players" />
+                <input name="q" defaultValue={q ?? ""} placeholder="Player name" className="input" style={{ maxWidth: 180 }} aria-label="Search players" />
                 <button className="btn btn-primary btn-sm">Search</button>
               </form>
               {cardEl ? <div className="only-m" style={{ borderBottom: "1px solid var(--hair)" }}>{cardEl}</div> : null}

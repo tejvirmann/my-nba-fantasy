@@ -2,6 +2,7 @@ import Link from "next/link";
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { TeamLogo } from "@/components/TeamLogo";
 import { RefreshBar } from "@/components/RefreshBar";
 import { parseWeek, WeekBar } from "@/components/WeekBar";
 import { abbrevName } from "@/lib/names";
@@ -124,7 +125,7 @@ export default async function MatchupPage({ params, searchParams }: { params: Pr
         <>
           <div className="mhead">
             <div className="mteam">
-              <span className="av lg" style={{ background: "var(--accent)", color: "var(--accent-ink)" }}>{left.team.name.slice(0, 2).toUpperCase()}</span>
+              <TeamLogo team={left.team} size={64} />
               <div className="min-w-0">
                 <div className="t">{left.team.name}</div>
                 <div className="rec">{team?.id === left.team.id ? "You" : ""}{myMatch?.isPlayoff ? " · Playoffs" : ""}</div>
@@ -133,7 +134,7 @@ export default async function MatchupPage({ params, searchParams }: { params: Pr
             </div>
             <div className="mvs">VS</div>
             <div className="mteam r">
-              <span className="av lg" style={{ background: "#555b64" }}>{(rightTeam?.team.name ?? "BYE").slice(0, 2).toUpperCase()}</span>
+              {rightTeam ? <TeamLogo team={rightTeam.team} size={64} /> : <span className="av lg" style={{ background: "#555b64" }}>BY</span>}
               <div className="min-w-0">
                 <div className="t">{rightTeam?.team.name ?? "Bye week"}</div>
                 <div className="rec">{finalized ? "Final" : view.settled ? "Final" : "In progress"}</div>

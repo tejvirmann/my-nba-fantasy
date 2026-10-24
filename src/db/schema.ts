@@ -113,10 +113,19 @@ export const teams = pgTable(
     waiverPriority: integer("waiver_priority").notNull().default(1),
     autoLock: boolean("auto_lock").notNull().default(false),
     autoLockThreshold: real("auto_lock_threshold").notNull().default(40),
+    /** Set when the manager uploads a team picture; doubles as the cache-busting version in the image URL. */
+    logoUpdatedAt: timestamp("logo_updated_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index("teams_league_idx").on(t.leagueId), index("teams_owner_idx").on(t.ownerId)],
 );
+
+/** Team pictures live apart from `teams` so listing teams never drags image bytes along. A small JPEG (resized in the browser). */
+export const teamLogos = pgTable("team_logos", {
+  teamId: uuid("team_id").primaryKey().references(() => teams.id, { onDelete: "cascade" }),
+  data: text("data").notNull(), // base64 JPEG, no data: prefix
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const rosterEntries = pgTable(
   "roster_entries",
